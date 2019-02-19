@@ -16,9 +16,9 @@ delta = (x0*q0^2*n^2)/(h0^(13/3));
 % Initial values
 xr = 0;
 hr = (q0^2/(g*h0^3))^(1/3);
-cr_upper = eta*delta*(1-1/(hr^(13/3)))+1/(hr^(13/3)); 
+cr_upper = eta*delta*(1-1/(hr^(13/3))+1/(hr^(13/3))); 
 cr_lower = 1/(hr^(13/3))-1/(108*delta*eta*hr^(29/3))*(10*delta*eta*hr-13)^2; 
-cr = 0.45;
+cr = 1/2*cr_upper;
 
 %%
 % Here we insert our analytical solution around hr
@@ -34,7 +34,7 @@ h_expansion = @(x) hr + b0/(hr^(13/3)*eta)*(x-xr)+b0*b1/(2*hr^(29/3)*eta^2)*(x-x
 
 % Boundaries of analytical solution
 M = 10;
-epsilon = 10^-3;
+epsilon = 10^-1;
 xr_plus = xr + epsilon;
 xr_min = xr - epsilon; 
 x_M = linspace(xr_min, xr_plus, M); 
@@ -63,7 +63,7 @@ x_R = linspace(xr_plus, x_max, N);
 x_L = linspace(xr_min, x_min, N);
 
 % Solving the coupled system of equations using ODE45
-[x_R, y_R] = ode45(@(t,x) system_one_particle_size(x, t, hr, eta, delta), x_R , y0_R);
+%[x_R, y_R] = ode45(@(t,x) system_one_particle_size(x, t, hr, eta, delta), x_R , y0_R);
 [x_L, y_L] = ode45(@(t,x) system_one_particle_size(x, t, hr, eta, delta), x_L, y0_L); 
 
 % Plotting the piecewise solutions
