@@ -22,11 +22,10 @@ hr = (q0^2/(g*h0^3))^(1/3);
 %cr_lower = 1/(hr^(13/3))-(1/(108*eta*hr^(29/3)))*(10*delta*eta*hr-13)^2; 
 
 eta_lower = (cr-1/(hr^(13/3)))/(delta*(1-1/(hr^(13/3)))); 
-eta_upper = fsolve(@(x) 1/(hr^(13/3))-1/(108*x*hr^(29/3))*(10*x*delta*hr-13)^2 - cr, eta_lower);
-eta = eta_lower; 
+eta_upper = fsolve(@(x) 1/(hr^(13/3))-1/(108*x*hr^(29/3))*(10*x*delta*hr-13)^2 - cr, 100);
+eta = 0.1;
 %%
 % Here we insert our analytical solution around hr
-% For now its just an ugly perturbation
 
 % Derivatives of c at xi_r and b0 and b1 from theta expansion
 c_prime_r = 1/(hr^(13/3))-cr; 
@@ -38,7 +37,7 @@ h_expansion = @(x) hr + b0/(hr^(13/3)*eta)*(x-xr)+b0*b1/(2*hr^(29/3)*eta^2)*(x-x
 
 % Boundaries of analytical solution
 M = 10;
-epsilon = 10^-1;
+epsilon = 10^-4;
 xr_plus = xr + epsilon;
 xr_min = xr - epsilon; 
 x_M = linspace(xr_min, xr_plus, M); 
@@ -47,8 +46,8 @@ h_M = h_expansion(x_M);
 
 cr_plus = cr;
 cr_min = cr; 
-hr_plus = h_M(end);%hr - epsilon;
-hr_min = h_M(1);%hr + epsilon;
+hr_plus = h_M(end); %hr - epsilon;
+hr_min = h_M(1); %hr + epsilon;
 
 %% Numerical integration of the system of equations 
 % Minimum and maximum xi coordinate respectively 
@@ -67,8 +66,8 @@ x_R = linspace(xr_plus, x_max, N);
 x_L = linspace(xr_min, x_min, N);
 
 % Solving the coupled system of equations using ODE45
-[x_R, y_R] = ode23s(@(t,x) system_one_particle_size(x, t, hr, eta, delta), x_R , y0_R);
-[x_L, y_L] = ode23s(@(t,x) system_one_particle_size(x, t, hr, eta, delta), x_L, y0_L); 
+[x_R, y_R] = ode45(@(t,x) system_one_particle_size(x, t, hr, eta, delta), x_R , y0_R);
+[x_L, y_L] = ode45(@(t,x) system_one_particle_size(x, t, hr, eta, delta), x_L, y0_L); 
 
 % Plotting the piecewise solutions
 figure
