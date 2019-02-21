@@ -20,13 +20,13 @@ xr = 0;
 hr = (q0^2/(g*h0^3))^(1/3);
 %cr_upper = eta*delta*(1-1/(hr^(13/3)))+1/(hr^(13/3)); 
 %cr_lower = 1/(hr^(13/3))-(1/(108*eta*hr^(29/3)))*(10*delta*eta*hr-13)^2; 
-
+eta = 0.01;
+cr = eta*delta*(1-hr^(-10/3))+ 1*hr^(-13/3);
 eta_lower = (cr-1/(hr^(13/3)))/(delta*(1-1/(hr^(13/3)))); 
 eta_upper = fsolve(@(x) 1/(hr^(13/3))-1/(108*x*hr^(29/3))*(10*x*delta*hr-13)^2 - cr, 100);
-eta = 0.1;
+
 %%
 % Here we insert our analytical solution around hr
-
 % Derivatives of c at xi_r and b0 and b1 from theta expansion
 c_prime_r = 1/(hr^(13/3))-cr; 
 b0 = (1/18)*(10*eta*delta*hr-13)-(1/2)*sqrt((1/81)*(10*eta*delta*hr-13)^2-(4/3)*eta*(hr^(29/3))*c_prime_r); %maybe minus sign change
@@ -34,25 +34,33 @@ c_double_prime_r = -13/(3*hr^(29/3)*eta)*b0 - c_prime_r;
 b1 = ((1-(1/6)*eta*hr^(29/3)*c_prime_r/(b0^2))^(-1))*(-(2/3)*c_prime_r*eta*hr^(29/3)/b0 - (1/6)*(eta*hr^(45/3))/(b0^2)*c_double_prime_r + 26/27 - (5/27)*delta*eta*hr);
 
 h_expansion = @(x) hr + b0/(hr^(13/3)*eta)*(x-xr)+b0*b1/(2*hr^(29/3)*eta^2)*(x-xr).^2; 
+h_prime = @(h) -(1./(h.^3 - hr.^3)).*(h.^3 .* ((1/eta)*(cr-h.^(-13/3)) - delta) + delta*h.^(-13/3));
+h_begin = fsolve(h_prime, 1.001*hr);
+h_end = fsolve(h_prime,0.99999*hr); 
+x_begin = 1.05*(fsolve(@(x) h_expansion(x) - h_begin, 0));
+x_end = 1.05*(fsolve(@(x) h_expansion(x) - h_end, 0)); 
+c_expansion = @(x) cr + c_prime_r*(x-xr)+c_double_prime_r*(x-xr).^2;  
 
 % Boundaries of analytical solution
 M = 10;
-epsilon = 10^-4;
-xr_plus = xr + epsilon;
-xr_min = xr - epsilon; 
+
+epsilon = 10^-2;
+xr_plus = x_end;
+xr_min = x_begin; 
 x_M = linspace(xr_min, xr_plus, M); 
 
 h_M = h_expansion(x_M); 
+c_M = c_expansion(x_M); 
 
-cr_plus = cr;
-cr_min = cr; 
+cr_plus = c_M(end);
+cr_min = c_M(1); 
 hr_plus = h_M(end); %hr - epsilon;
 hr_min = h_M(1); %hr + epsilon;
 
 %% Numerical integration of the system of equations 
 % Minimum and maximum xi coordinate respectively 
-x_min = xr - x0; 
-x_max = xr + x0; 
+x_min = xr - eta*x0; 
+x_max = xr + 2*eta*x0; 
 
 % Number of points for which we want the solution to be evaluated
 N = 500; 
@@ -82,6 +90,7 @@ ylabel('h($\xi$)', 'Interpreter', 'latex')
 figure
 hold on 
 plot(x_L, real(y_L(:,2)))
+plot(x_M, real(c_M))
 plot(x_R, real(y_R(:,2)))
 hold off
 xlabel('$\xi$', 'Interpreter', 'latex') 
