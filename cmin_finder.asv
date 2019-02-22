@@ -1,0 +1,7 @@
+function [cmin = cmin_finder(h_spline, c_spline, hmin, options)
+    
+    xi_min = fsolve(@(x) ppval(h_spline,x) - hmin, zeros(size(hmin)), options); 
+    cmin= ppval(c_spline, xi_min); 
+
+end
+
