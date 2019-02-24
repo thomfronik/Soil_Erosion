@@ -5,9 +5,9 @@ clear, close all
 
 % Initialise parameters 
 xr = 0;
-eta_begin = 10; 
-eta_end = 15; 
-N_eta = 10; 
+eta_begin = 0.1; 
+eta_end = 20; 
+N_eta = 100; 
 
 % Initialise constants and scaling factors
 g = 9.81; 
