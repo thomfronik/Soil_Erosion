@@ -5,8 +5,8 @@ clear, close all
 
 % Initialise parameters 
 xr = 0;
-eta_begin = 0.1; 
-eta_end = 20; 
+eta_begin = 1; 
+eta_end = 9; 
 N_eta = 100; 
 
 % Initialise constants and scaling factors
@@ -24,6 +24,7 @@ eta = linspace(eta_begin, eta_end, N_eta);
 % Loop to find best eta value 
 global_min_err = inf;
 
+errors = zeros(size(eta)); 
 for i = 1:length(eta)
 
     % Initial values
@@ -87,8 +88,8 @@ for i = 1:length(eta)
     % % % Numerical integration of the system of equations % % %
 
     % Minimum and maximum xi coordinate respectively 
-    x_min = xr - 10*eta(i)*x0; 
-    x_max = xr + 10*eta(i)*x0; 
+    x_min = -5; 
+    x_max = 5; 
 
     % Number of points for which we want the solution to be evaluated
     N = 500; 
@@ -111,28 +112,38 @@ for i = 1:length(eta)
     x = [ fliplr(x_L')' ; x_M(2:end-1) ; x_R ]; 
     h = [ fliplr(y_L(:,1)')' ; h_M(2:end-1) ; y_R(:,1) ]; 
     c = [ fliplr(y_L(:,2)')' ; c_M(2:end-1) ; y_R(:,2) ];
-
+    
+    if ~isreal(c)
+        continue
+    end
+    
     % Constructing splines
     h_spline = spline(x,h); 
     c_spline = spline(x,c); 
-
+    
     % Defining our h+ and c+ values and then use them to find h- and c-
     xplus = x(x > 0); 
     hplus = h(h < hr);
     cplus = c(h < hr); 
     hmin = rh_condition_height(hplus, hr); 
-    [cmin, xmin] = cmin_finder(h_spline, c_spline, hmin); 
-
+    [cmin, xmin] = cmin_finder(x, h, c, hmin); 
 
     % Finding jump position by finding the minimal error
     min_err = inf; 
     k = 0; 
-    int_points = 100; 
-
-    for j = 1:length(hplus)
-
-        err = error_function(c_spline, xmin(j), xplus(j), int_points);
-
+    int_points = 100;
+    
+    % New way of finding the minimal error
+    for j = 1:length(hplus)  
+        [err_c, errint] = error_function(x,c, xmin(j), xplus(j), int_points);
+        
+        
+        if err_c < 10e-3
+            err = (1-(1/(xplus(j)-xmin(j)))*trapz([ fliplr(xmin(1:j)')' ; xplus(1:j) ],[ fliplr(cmin(1:j)')' ; cplus(1:j) ]))^2;
+        else
+            err = inf;
+        end
+     
         if err < min_err
             min_err = err;
             k = j;
@@ -140,10 +151,13 @@ for i = 1:length(eta)
 
     end
     
+    errors(i) = min_err; 
     if min_err < global_min_err
         
         global_min_err = min_err;
         opt_eta = eta(i);
+        opt_c_spline = c_spline; 
+        opt_x = x; 
         % Determining the full solution
         x_sol = [ fliplr(xmin(1:k)')' ; xplus(1:k) ];
         h_sol = [ fliplr(hmin(1:k)')' ; hplus(1:k) ]; 
@@ -157,6 +171,12 @@ for i = 1:length(eta)
 %% Plotting the piecewise solutions
 % entire plot can be replaced by "plot(x,h)" and "plot(x,c)" respectively,
 % but this just shows nice colors. 
+figure 
+hold on
+plot(eta, errors);
+hold off 
+xlabel('$\eta$', 'Interpreter', 'latex'); 
+ylabel('error'); 
 
 figure
 hold on 
@@ -187,7 +207,7 @@ figure
 plot(x_sol, c_sol); 
 xlabel('$\xi$', 'Interpreter', 'latex') 
 ylabel('c($\xi$)', 'Interpreter', 'latex') 
-
+title('Concentration, one period'); 
 %% Plot full solution
 
 % Number of periods for which you want to see the solution
