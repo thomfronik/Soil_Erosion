@@ -1,7 +1,7 @@
-function [cmin, xi_min] = cmin_finder(h_spline, c_spline, hmin)
+function [cmin, xi_min] = cmin_finder(x, h, c, hmin)
     
-    xi_min = fsolve(@(x) ppval(h_spline,x) - hmin, zeros(size(hmin))); 
-    cmin= ppval(c_spline, xi_min); 
+    xi_min = fsolve(@(y) interp1(x,h, y) - hmin, zeros(size(hmin))); 
+    cmin= interp1(x,c,xi_min); 
 
 end
 

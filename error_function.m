@@ -1,9 +1,9 @@
 
-function err = error_function(c_spline, xmin, xplus, int_points) 
+function [err_c_condition, err_int_condition] = error_function(x,c, xmin, xplus, int_points) 
 
-    err_c_condition = (ppval(c_spline, xmin) - ppval(c_spline, xplus))^2;
-    err_int_condition = (1-(1/abs(xmin - xplus))*trapz(ppval(c_spline, linspace(xmin, xplus, int_points))))^2; 
-    err = err_c_condition + err_int_condition;
+    err_c_condition = abs(interp1(x,c,xmin) - interp1(x,c,xplus));
+    err_int_condition = (1-(1/abs(xmin - xplus))*trapz(interp1(x,c, linspace(xmin, xplus, int_points))))^2; 
+    err = 10*err_c_condition + err_int_condition;
 
 end
 
